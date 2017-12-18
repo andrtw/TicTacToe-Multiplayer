@@ -1,11 +1,43 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary</item>
+        <item name="colorAccent">@color/primary</item>
+        <item name="android:windowBackground">@color/primary</item>
+        <item name="android:textColor">@color/text_light</item>
+    </style>
+
+    <style name="HeaderLight">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_light</item>
+    </style>
+
+    <style name="HeaderDark" parent="HeaderLight">
+        <item name="android:textColor">@color/text_dark</item>
+    </style>
+
+    <style name="EditText" parent="Base.Widget.AppCompat.EditText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">42dp</item>
+        <item name="android:background">@drawable/edit_text_background</item>
+        <item name="android:paddingBottom">@dimen/sm_padding</item>
+        <item name="android:paddingLeft">@dimen/md_padding</item>
+        <item name="android:paddingRight">@dimen/md_padding</item>
+        <item name="android:paddingTop">@dimen/sm_padding</item>
+    </style>
+
+    <style name="ButtonPrimary" parent="Base.Widget.AppCompat.Button">
+        <item name="android:layout_height">42dp</item>
+        <item name="android:textColor">@color/text_light</item>
+        <item name="android:background">@drawable/button_primary_background</item>
+    </style>
+
+    <style name="ButtonSecondary" parent="ButtonPrimary">
+        <item name="android:background">@drawable/button_secondary_background</item>
     </style>
 
 </resources>

@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+
+    <!-- primary color -->
+    <color name="primary">#222</color>
+    <color name="primary_2">#444</color>
+
+    <!-- secondary color -->
+    <color name="secondary">#555</color>
+    <color name="secondary_2">#777</color>
+
+    <!-- text color -->
+    <color name="text_light">#ddd</color>
+    <color name="text_dark">@color/primary</color>
+
+    <!-- edit text -->
+    <color name="edit_text_background">#ddd</color>
+    <color name="edit_text_border">#ccc</color>
+
 </resources>

@@ -1,3 +1,12 @@
 <resources>
-    <string name="app_name">TicTacToeMultiplayer</string>
+    <string name="app_name">TicTacToe Multiplayer</string>
+
+    <!-- username dialog -->
+    <string name="dialog_username_message">Enter your username to start playing</string>
+    <string name="dialog_username_hint">Username</string>
+    <string name="dialog_username_exit">Exit</string>
+    <string name="dialog_username_play">Play</string>
+    <string name="dialog_username_error_username_taken">Username already taken</string>
+    <string name="dialog_username_error_username_not_valid">Username is not valid. Only characters and numbers are allowed</string>
+
 </resources>
