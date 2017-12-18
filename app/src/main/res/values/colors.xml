@@ -17,4 +17,9 @@
     <color name="edit_text_background">#ddd</color>
     <color name="edit_text_border">#ccc</color>
 
+    <!-- onlwaitingUseruser -->
+    <color name="user_background">@color/primary</color>
+    <color name="user_background_pressed">@color/primary_2</color>
+    <color name="user_border">#ccc</color>
+
 </resources>

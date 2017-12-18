@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/waitingUserTV"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:background="@drawable/waiting_user_background"
+        android:textSize="20sp"
+        android:padding="@dimen/sm_padding"
+        android:layout_marginTop="@dimen/sm_padding"
+        android:layout_marginStart="@dimen/xs_padding"
+        android:layout_marginEnd="@dimen/xs_padding" />
+
+</LinearLayout>

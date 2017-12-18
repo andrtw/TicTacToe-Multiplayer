@@ -9,4 +9,6 @@
     <string name="dialog_username_error_username_taken">Username already taken</string>
     <string name="dialog_username_error_username_not_valid">Username is not valid. Only characters and numbers are allowed</string>
 
+    <string name="no_waiting_users">It seems that nobody wants to play :(</string>
+
 </resources>
