@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "900966335650",
+    "firebase_url": "https://tictactoemultiplayer-d4600.firebaseio.com",
+    "project_id": "tictactoemultiplayer-d4600",
+    "storage_bucket": "tictactoemultiplayer-d4600.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:900966335650:android:862908b90bbc95c9",
+        "android_client_info": {
+          "package_name": "com.example.andrea.tictactoemultiplayer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "900966335650-nnkf4p5ogot3k4v9tcigmglsgivllls5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.andrea.tictactoemultiplayer",
+            "certificate_hash": "1630189e6fe499f3da902be09a21aaf307f9c28d"
+          }
+        },
+        {
+          "client_id": "900966335650-aj8e08jnrk2vrcn5037kcsunuogidho9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHErfJwKn7ivezhJ_rDC7bBw57HPMaxNg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "900966335650-aj8e08jnrk2vrcn5037kcsunuogidho9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
