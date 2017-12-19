@@ -6,9 +6,11 @@ import android.support.v4.app.DialogFragment
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.view.View
+import com.example.andrea.tictactoemultiplayer.models.Cell
 import com.example.andrea.tictactoemultiplayer.models.Room
 import com.example.andrea.tictactoemultiplayer.models.User
 import com.example.andrea.tictactoemultiplayer.utils.Logger
+import com.example.andrea.tictactoemultiplayer.views.BoardView
 import com.example.andrea.tictactoemultiplayer.views.UsernameDialog
 import com.example.andrea.tictactoemultiplayer.views.WaitingUsersAdapter
 import com.google.firebase.database.DataSnapshot
@@ -20,10 +22,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(),
         UsernameDialog.UsernameDialogListener,
         WaitingUsersAdapter.WaitingUsersListener {
-
-    companion object {
-        private val SKIP_TO_GAME = true
-    }
 
     // username dialog
     private lateinit var mUsernameDialog: UsernameDialog
@@ -43,6 +41,7 @@ class MainActivity : AppCompatActivity(),
 
     // rooms
     private val mRoomsRef = mDb.getReference("rooms")
+    private lateinit var mRoomsListener: ValueEventListener
 
     // current user
     private var mUser: User? = null
@@ -53,15 +52,17 @@ class MainActivity : AppCompatActivity(),
 
         window.fullscreen()
 
-        if (SKIP_TO_GAME) {
-            startActivity(Intent(this, GameActivity::class.java))
-            finish()
-        }
-
         showUsernameDialog()
+
+        // users recycler view
+        val layoutManager = GridLayoutManager(this, 3)
+        usersRV.layoutManager = layoutManager
+        val adapter = WaitingUsersAdapter(mWaitingUsers, this)
+        usersRV.adapter = adapter
 
         listenForOnlineUsers()
         listenForWaitingUsers()
+        listenForRooms()
     }
 
     /**
@@ -138,7 +139,7 @@ class MainActivity : AppCompatActivity(),
                 }
                 mWaitingUsers.remove(mUser)
 
-                setupWaitingUsersList()
+                updateWaitingUsersList()
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
@@ -148,40 +149,76 @@ class MainActivity : AppCompatActivity(),
     }
 
     /**
-     * Setup the list of the waiting users
+     * Listen for changes in the rooms reference to check if somebody invites us to play
      */
-    private fun setupWaitingUsersList() {
+    private fun listenForRooms() {
+        mRoomsListener = mRoomsRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                dataSnapshot.children.forEach {
+                    val guest = it.child("userGuest").getValue(User::class.java)
+                    if (guest?.username == mUser?.username) {
+                        Logger.d("Somebody invited ${mUser!!.username} to play")
+
+                        play(it.key, GameActivity.UserType.GUEST)
+                    }
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Logger.e("listenForRooms onCancelled: ${databaseError.toException()}")
+            }
+        })
+    }
+
+    /**
+     * Update the list of the waiting users
+     */
+    private fun updateWaitingUsersList() {
         // no users available to play
         if (mWaitingUsers.isEmpty()) {
             noUsersOnlineTV.visibility = View.VISIBLE
+            usersRV.visibility = View.INVISIBLE
             return
         }
 
         // show waiting users
-        val layoutManager = GridLayoutManager(this, 3)
-        usersRV.layoutManager = layoutManager
-
-        val adapter = WaitingUsersAdapter(mWaitingUsers, this)
-        usersRV.adapter = adapter
+        noUsersOnlineTV.visibility = View.INVISIBLE
+        usersRV.visibility = View.VISIBLE
+        usersRV.adapter.notifyDataSetChanged()
     }
 
     /**
      * Click on a waiting user
      */
     override fun onWaitingUserClick(user: User) {
+        // create the default cells
+        val cellsList = mutableListOf<Cell>()
+        for (r in 0 until BoardView.ROWS) {
+            for (c in 0 until BoardView.COLUMNS) {
+                cellsList.add(Cell(r, c))
+            }
+        }
+
         // add users to the same room
-        val room = Room(mUser!!, user)
-        room.id = mRoomsRef.push().key
-        mRoomsRef.child(room.id).setValue(room)
+        val room = Room(mUser!!, user, cellsList)
+        val roomId = mRoomsRef.push().key
+        mRoomsRef.child(roomId).setValue(room)
 
         // remove users from waiting (since they are now playing)
         mWaitingRef.child(mUser!!.id).removeValue()
         mWaitingRef.child(user.id).removeValue()
 
-        // TODO start GameActivity passing the room key
-//        val i = Intent(this, GameActivity::class.java)
-//        i.putExtra(GameActivity.EXTRA_ROOM_ID, room.id)
-//        startActivity(i)
+        play(roomId, GameActivity.UserType.HOST)
+    }
+
+    private fun play(roomId: String, userType: GameActivity.UserType) {
+        val i = Intent(this, GameActivity::class.java)
+        i.putExtra(GameActivity.EXTRA_ROOM_ID, roomId)
+        i.putExtra(GameActivity.EXTRA_USER_TYPE, userType)
+        startActivity(i)
+
+        // TODO handle going back to MainActivity from GameActivity
+//        finish()
     }
 
     override fun onDestroy() {
@@ -192,6 +229,9 @@ class MainActivity : AppCompatActivity(),
 
         // remove listener for waiting users
         mWaitingRef.removeEventListener(mWaitingUsersListener)
+
+        // remove listener for rooms
+        mRoomsRef.removeEventListener(mRoomsListener)
 
         // TODO delete user form database
         if (mUser != null) {

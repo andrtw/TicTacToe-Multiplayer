@@ -1,12 +1,9 @@
 package com.example.andrea.tictactoemultiplayer.views
 
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Color
-import android.widget.Button
 import android.widget.TableLayout
 import android.widget.TableRow
-import com.example.andrea.tictactoemultiplayer.R
 
 /**
  * Created by andrea on 18/12/2017.
@@ -19,43 +16,42 @@ class BoardView(context: Context) : TableLayout(context) {
     }
 
     interface BoardListener {
-        fun onCellClick(cell: Button)
+        fun onCellClick(row: Int, column: Int, cell: CellView)
     }
 
     private lateinit var mListener: BoardListener
+
+    private lateinit var mBoard: Array<Array<CellView.CellInfo.CellStatus>>
 
     init {
         createCells()
     }
 
     private fun createCells() {
-        val cellSize = when (resources.configuration.orientation) {
-            Configuration.ORIENTATION_PORTRAIT -> resources.displayMetrics.widthPixels / COLUMNS
-            Configuration.ORIENTATION_LANDSCAPE -> resources.displayMetrics.heightPixels / ROWS
-            else -> resources.displayMetrics.widthPixels / COLUMNS
-        }
-
+        // add CellView to table layout
         for (r in 0 until ROWS) {
             val tableRow = TableRow(context)
             for (c in 0 until COLUMNS) {
-                val btn = Button(context)
-                btn.text = "$r,$c"
-                btn.setTextColor(resources.getColor(R.color.text_dark))
+                val cell = CellView(context)
+                cell.text = "$r,$c"
 
-                val params = TableRow.LayoutParams(cellSize, cellSize)
-                btn.layoutParams = params
+                val info = CellView.CellInfo(r, c)
+                cell.setCellInfo(info)
 
-                val info = CellInfo(r, c, CellInfo.CellStatus.FREE)
-                btn.tag = info
-
-                btn.setOnClickListener {
-                    mListener.onCellClick(btn)
+                cell.setOnClickListener {
+                    mListener.onCellClick(r, c, cell)
                 }
 
-                tableRow.addView(btn)
+                tableRow.addView(cell)
             }
             addView(tableRow)
         }
+        // create board array
+        mBoard = arrayOf(
+                arrayOf(CellView.CellInfo.CellStatus.FREE, CellView.CellInfo.CellStatus.FREE, CellView.CellInfo.CellStatus.FREE),
+                arrayOf(CellView.CellInfo.CellStatus.FREE, CellView.CellInfo.CellStatus.FREE, CellView.CellInfo.CellStatus.FREE),
+                arrayOf(CellView.CellInfo.CellStatus.FREE, CellView.CellInfo.CellStatus.FREE, CellView.CellInfo.CellStatus.FREE)
+        )
 
         setBackgroundColor(Color.RED)
     }
@@ -64,15 +60,8 @@ class BoardView(context: Context) : TableLayout(context) {
         mListener = listener
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration?) {
-        super.onConfigurationChanged(newConfig)
-        createCells()
-    }
-
-    data class CellInfo(val row: Int, val column: Int, val status: CellStatus) {
-        enum class CellStatus {
-            CROSS, NOUGHT, FREE
-        }
+    fun setCellStatus(row: Int, column: Int, status: CellView.CellInfo.CellStatus) {
+        mBoard[row][column] = status
     }
 
 }

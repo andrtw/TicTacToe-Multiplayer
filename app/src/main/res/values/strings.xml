@@ -9,6 +9,10 @@
     <string name="dialog_username_error_username_taken">Username already taken</string>
     <string name="dialog_username_error_username_not_valid">Username is not valid. Only characters and numbers are allowed</string>
 
+    <!-- waiting users -->
     <string name="no_waiting_users">It seems that nobody wants to play :(</string>
+
+    <!-- game activity -->
+    <string name="other_player_username">Playing with: %1$s</string>
 
 </resources>
