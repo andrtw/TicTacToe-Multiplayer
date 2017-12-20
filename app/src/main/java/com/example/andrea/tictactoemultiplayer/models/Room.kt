@@ -7,5 +7,6 @@ import com.example.andrea.tictactoemultiplayer.GameActivity
  */
 data class Room(val userHost: User,
                 val userGuest: User,
-                val cells: List<Cell>,
-                val turn: GameActivity.Turn = GameActivity.Turn.HOST)
+                val cells: List<List<Cell>>,
+                val turn: GameActivity.Turn = GameActivity.Turn.HOST,
+                val winner: Winner = Winner())

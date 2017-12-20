@@ -14,5 +14,10 @@
 
     <!-- game activity -->
     <string name="other_player_username">Playing with: %1$s</string>
+    <string name="your_turn">Your turn</string>
+    <string name="other_player_turn">%1$s\'s turn</string>
+    <string name="you_win">You win!</string>
+    <string name="other_player_win">%1$s win!</string>
+    <string name="player_quit">%1$s quit the room</string>
 
 </resources>

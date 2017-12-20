@@ -3,7 +3,10 @@ package com.example.andrea.tictactoemultiplayer
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.v7.app.AppCompatActivity
+import android.widget.Toast
+import com.example.andrea.tictactoemultiplayer.models.Cell
 import com.example.andrea.tictactoemultiplayer.models.User
+import com.example.andrea.tictactoemultiplayer.models.Winner
 import com.example.andrea.tictactoemultiplayer.utils.Logger
 import com.example.andrea.tictactoemultiplayer.views.BoardView
 import com.example.andrea.tictactoemultiplayer.views.CellView
@@ -21,13 +24,20 @@ class GameActivity : AppCompatActivity(), BoardView.BoardListener {
         HOST, GUEST;
 
         fun swap() = when (this) {
-            HOST -> GUEST
-            GUEST -> HOST
+            Turn.HOST -> Turn.GUEST
+            Turn.GUEST -> Turn.HOST
         }
     }
 
     enum class UserType {
-        HOST, GUEST
+        /**
+         * Host is crosses
+         */
+        HOST,
+        /**
+         * Guest is noughts
+         */
+        GUEST
     }
 
     // board view
@@ -36,12 +46,19 @@ class GameActivity : AppCompatActivity(), BoardView.BoardListener {
     // users types
     private lateinit var mUserType: UserType
     private lateinit var mOtherUserType: UserType
+    private var mOtherUsername = ""
 
     // turn
     private var mTurn = Turn.HOST
 
+    // game ended
+    private var mWinner = Winner()
+
     // database
     private val mDb = FirebaseDatabase.getInstance()
+
+    // waiting users
+    private val mWaitingRef = mDb.getReference("waiting")
 
     // room where host and guest are playing
     private lateinit var mRoomRef: DatabaseReference
@@ -69,15 +86,67 @@ class GameActivity : AppCompatActivity(), BoardView.BoardListener {
     }
 
     /**
+     * Returns the Firebase node for the user type
+     */
+    fun getUserFirebaseNode(userType: UserType) = when (userType) {
+        UserType.HOST -> "userHost"
+        UserType.GUEST -> "userGuest"
+    }
+
+    /**
      * Listen for changes in the room (users moves)
      */
     private fun listenForRoom() {
         mRoomListener = mRoomRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                mTurn = Turn.valueOf(dataSnapshot.child("turn").getValue(String::class.java)!!)
+                try {
+                    mOtherUsername = dataSnapshot.child(getUserFirebaseNode(mOtherUserType)).getValue(User::class.java)!!.username
 
-                youTV.text = dataSnapshot.child(mUserType.name).getValue(User::class.java)!!.username
-                otherPlayerTV.text = dataSnapshot.child(mOtherUserType.name).getValue(User::class.java)!!.username
+                    // cells
+                    val board: MutableList<MutableList<Cell>> = mutableListOf()
+                    val rows = dataSnapshot.child("cells").value as ArrayList<*>
+                    rows.forEach {
+                        val boardRow = mutableListOf<Cell>()
+                        val row = it as ArrayList<*>
+                        row.forEach {
+                            val cell = it as HashMap<*, *>
+                            boardRow.add(Cell(
+                                    (cell["row"].toString()).toInt(),
+                                    (cell["column"].toString()).toInt(),
+                                    CellView.CellInfo.CellStatus.valueOf(cell["status"].toString())
+                            ))
+                        }
+                        board.add(boardRow)
+                    }
+
+                    mBoardView.updateBoard(board)
+
+                    // turn
+                    mTurn = Turn.valueOf(dataSnapshot.child("turn").getValue(String::class.java)!!)
+                    if (hasTurn(mUserType)) {
+                        infoTV.text = getString(R.string.your_turn)
+                    } else if (hasTurn(mOtherUserType)) {
+                        infoTV.text = getString(R.string.other_player_turn, mOtherUsername)
+                    }
+
+                    // winner
+                    mWinner = dataSnapshot.child("winner").getValue(Winner::class.java)!!
+                    if (mWinner.who != Winner.Who.NONE) {
+                        if (hasTurn(mUserType)) {
+                            infoTV.text = getString(R.string.you_win)
+                            mBoardView.colorCells(mWinner.cells, resources.getDrawable(R.drawable.cell_win_background))
+                        } else if (hasTurn(mOtherUserType)) {
+                            infoTV.text = getString(R.string.other_player_win, mOtherUsername)
+                            mBoardView.colorCells(mWinner.cells, resources.getDrawable(R.drawable.cell_win_background))
+                        }
+
+                        val bgResId = if (hasWon()) R.drawable.cell_win_background else R.drawable.cell_lose_background
+                        mBoardView.colorCells(mWinner.cells, resources.getDrawable(bgResId))
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@GameActivity, getString(R.string.player_quit, mOtherUsername), Toast.LENGTH_LONG).show()
+                    finish()
+                }
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
@@ -103,34 +172,93 @@ class GameActivity : AppCompatActivity(), BoardView.BoardListener {
     }
 
     override fun onCellClick(row: Int, column: Int, cell: CellView) {
-        /*
-        TODO
-        - update database
-        - swap turn
-        - check for winner
-         */
-
         val info = cell.getCellInfo()
 
         // do nothing if cell already has a cross or a nought
         if (info.status != CellView.CellInfo.CellStatus.FREE) {
             return
         }
-
-//        mBoardView.setCellStatus(row, column, CellView.CellInfo.CellStatus.CROSS)
-
-//        mTurn.swap()
-
-//        saveDataToDatabase()
-
-        if (canClickCell()) {
-            Logger.d("Host clicked on $row, $column")
+        // do nothing if it's not user's turn
+        if (!hasTurn(mUserType)) {
+            return
         }
+        // do nothing if someone already won
+        if (mWinner.who != Winner.Who.NONE) {
+            return
+        }
+
+        // select the cell status based on the turn
+        val currentStatus = when (mTurn) {
+            Turn.HOST -> CellView.CellInfo.CellStatus.CROSS
+            Turn.GUEST -> CellView.CellInfo.CellStatus.NOUGHT
+        }
+
+        // update the just clicked cell
+        mBoardView.updateCell(info.row, info.column, currentStatus)
+
+        // check for winner
+        val winnerCells = mBoardView.checkForWinner(currentStatus)
+        if (winnerCells.isNotEmpty()) {
+            // get the winner cells
+            mWinner.cells = winnerCells
+            mWinner.who = when (currentStatus) {
+                CellView.CellInfo.CellStatus.CROSS -> Winner.Who.HOST
+                CellView.CellInfo.CellStatus.NOUGHT -> Winner.Who.GUEST
+                else -> Winner.Who.NONE
+            }
+            // set background to winner cells
+            var bgColor = resources.getDrawable(R.drawable.cell_background)
+            if (hasTurn(mUserType)) {
+                bgColor = resources.getDrawable(R.drawable.cell_win_background)
+            } else if (hasTurn(mOtherUserType)) {
+                bgColor = resources.getDrawable(R.drawable.cell_lose_background)
+            }
+            mBoardView.colorCells(winnerCells, bgColor)
+        } else {
+            mWinner.who = Winner.Who.NONE
+        }
+
+        // only swap the turn if nobody won
+        if (mWinner.who == Winner.Who.NONE) {
+            mTurn = mTurn.swap()
+        }
+
+        saveDataToDatabase(Cell(info.row, info.column, currentStatus))
     }
 
-    private fun saveDataToDatabase() {
+    private fun saveDataToDatabase(updatedCell: Cell) {
+        /// turn
+        mRoomRef.child("turn").setValue(mTurn)
 
+        // clicked cell
+        mRoomRef
+                .child("cells")
+                .child(updatedCell.row.toString())
+                .child(updatedCell.column.toString())
+                .updateChildren(mapOf("status" to updatedCell.status))
+
+        // winner
+        mRoomRef.child("winner").setValue(mWinner)
     }
 
-    private fun canClickCell() = (mUserType == UserType.HOST && mTurn == Turn.HOST) || (mUserType == UserType.GUEST && mTurn == Turn.GUEST)
+    /**
+     * Returns whether the user can click or not
+     */
+    private fun hasTurn(userType: UserType) =
+            (userType == UserType.HOST && mTurn == Turn.HOST) || (userType == UserType.GUEST && mTurn == Turn.GUEST)
+
+    private fun hasWon() =
+            (mWinner.who == Winner.Who.HOST && mUserType == UserType.HOST) ||
+                    (mWinner.who == Winner.Who.GUEST && mUserType == UserType.GUEST)
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // remove room
+        mRoomRef.removeEventListener(mRoomListener)
+        mRoomRef.removeValue()
+
+        // add back to waiting
+        mWaitingRef.child(CurrentUser.user!!.id).setValue(CurrentUser.user)
+    }
 }

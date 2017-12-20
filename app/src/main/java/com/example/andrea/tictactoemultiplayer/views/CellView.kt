@@ -2,17 +2,21 @@ package com.example.andrea.tictactoemultiplayer.views
 
 import android.content.Context
 import android.content.res.Configuration
-import android.widget.Button
+import android.view.Gravity
 import android.widget.TableRow
+import android.widget.TextView
 import com.example.andrea.tictactoemultiplayer.R
 
 /**
  * Created by andrea on 19/12/2017.
  */
-class CellView(context: Context) : Button(context) {
+class CellView(context: Context) : TextView(context) {
 
     init {
+        textSize = 22f
         setTextColor(resources.getColor(R.color.text_dark))
+        gravity = Gravity.CENTER
+        background = resources.getDrawable(R.drawable.cell_background)
 
         setSize()
     }

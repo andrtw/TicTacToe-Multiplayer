@@ -17,9 +17,16 @@
     <color name="edit_text_background">#ddd</color>
     <color name="edit_text_border">#ccc</color>
 
-    <!-- onlwaitingUseruser -->
+    <!-- online users -->
     <color name="user_background">@color/primary</color>
     <color name="user_background_pressed">@color/primary_2</color>
     <color name="user_border">#ccc</color>
+
+    <!-- cell -->
+    <color name="cell_border">@color/primary</color>
+    <color name="cell_background">#fff</color>
+    <color name="cell_background_pressed">#eee</color>
+    <color name="cell_win">#3a3</color>
+    <color name="cell_lose">#a33</color>
 
 </resources>

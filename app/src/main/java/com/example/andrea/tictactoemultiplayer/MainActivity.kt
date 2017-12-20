@@ -10,7 +10,6 @@ import com.example.andrea.tictactoemultiplayer.models.Cell
 import com.example.andrea.tictactoemultiplayer.models.Room
 import com.example.andrea.tictactoemultiplayer.models.User
 import com.example.andrea.tictactoemultiplayer.utils.Logger
-import com.example.andrea.tictactoemultiplayer.views.BoardView
 import com.example.andrea.tictactoemultiplayer.views.UsernameDialog
 import com.example.andrea.tictactoemultiplayer.views.WaitingUsersAdapter
 import com.google.firebase.database.DataSnapshot
@@ -59,6 +58,10 @@ class MainActivity : AppCompatActivity(),
         usersRV.layoutManager = layoutManager
         val adapter = WaitingUsersAdapter(mWaitingUsers, this)
         usersRV.adapter = adapter
+    }
+
+    override fun onResume() {
+        super.onResume()
 
         listenForOnlineUsers()
         listenForWaitingUsers()
@@ -103,6 +106,8 @@ class MainActivity : AppCompatActivity(),
         mOnlineRef.child(mUser!!.id).setValue(mUser)
         // add to waiting
         mWaitingRef.child(mUser!!.id).setValue(mUser)
+
+        CurrentUser.user = mUser
 
         dialog.dismiss()
     }
@@ -154,11 +159,10 @@ class MainActivity : AppCompatActivity(),
     private fun listenForRooms() {
         mRoomsListener = mRoomsRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
+                // loop through rooms
                 dataSnapshot.children.forEach {
                     val guest = it.child("userGuest").getValue(User::class.java)
                     if (guest?.username == mUser?.username) {
-                        Logger.d("Somebody invited ${mUser!!.username} to play")
-
                         play(it.key, GameActivity.UserType.GUEST)
                     }
                 }
@@ -192,12 +196,12 @@ class MainActivity : AppCompatActivity(),
      */
     override fun onWaitingUserClick(user: User) {
         // create the default cells
-        val cellsList = mutableListOf<Cell>()
-        for (r in 0 until BoardView.ROWS) {
-            for (c in 0 until BoardView.COLUMNS) {
-                cellsList.add(Cell(r, c))
-            }
-        }
+        // why list instead of array? DatabaseException: Serializing Arrays is not supported, please use Lists instead
+        val cellsList = listOf(
+                listOf(Cell(0, 0), Cell(0, 1), Cell(0, 2)),
+                listOf(Cell(1, 0), Cell(1, 1), Cell(1, 2)),
+                listOf(Cell(2, 0), Cell(2, 1), Cell(2, 2))
+        )
 
         // add users to the same room
         val room = Room(mUser!!, user, cellsList)
@@ -219,11 +223,23 @@ class MainActivity : AppCompatActivity(),
 
         // TODO handle going back to MainActivity from GameActivity
 //        finish()
+
+        removeAllFirebaseListeners()
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
+        removeAllFirebaseListeners()
+
+        // TODO delete user form database
+        if (mUser != null) {
+            mOnlineRef.child(mUser!!.id).removeValue()
+            mWaitingRef.child(mUser!!.id).removeValue()
+        }
+    }
+
+    private fun removeAllFirebaseListeners() {
         // remove listener for online users
         mOnlineRef.removeEventListener(mOnlineUsersListener)
 
@@ -232,11 +248,5 @@ class MainActivity : AppCompatActivity(),
 
         // remove listener for rooms
         mRoomsRef.removeEventListener(mRoomsListener)
-
-        // TODO delete user form database
-        if (mUser != null) {
-            mOnlineRef.child(mUser!!.id).removeValue()
-            mWaitingRef.child(mUser!!.id).removeValue()
-        }
     }
 }
