@@ -134,10 +134,8 @@ class GameActivity : AppCompatActivity(), BoardView.BoardListener {
                     if (mWinner.who != Winner.Who.NONE) {
                         if (hasTurn(mUserType)) {
                             infoTV.text = getString(R.string.you_win)
-                            mBoardView.colorCells(mWinner.cells, resources.getDrawable(R.drawable.cell_win_background))
                         } else if (hasTurn(mOtherUserType)) {
                             infoTV.text = getString(R.string.other_player_win, mOtherUsername)
-                            mBoardView.colorCells(mWinner.cells, resources.getDrawable(R.drawable.cell_win_background))
                         }
 
                         val bgResId = if (hasWon()) R.drawable.cell_win_background else R.drawable.cell_lose_background
