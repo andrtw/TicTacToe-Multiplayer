@@ -13,7 +13,7 @@ import com.example.andrea.tictactoemultiplayer.R
 class CellView(context: Context) : TextView(context) {
 
     init {
-        textSize = 22f
+        textSize = 28f
         setTextColor(resources.getColor(R.color.text_dark))
         gravity = Gravity.CENTER
         background = resources.getDrawable(R.drawable.cell_background)

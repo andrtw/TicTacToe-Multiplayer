@@ -19,5 +19,6 @@
     <string name="you_win">You win!</string>
     <string name="other_player_win">%1$s win!</string>
     <string name="player_quit">%1$s quit the room</string>
+    <string name="tie">Tie!</string>
 
 </resources>

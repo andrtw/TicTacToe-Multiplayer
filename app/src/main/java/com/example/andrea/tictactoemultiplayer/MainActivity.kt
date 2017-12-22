@@ -221,9 +221,6 @@ class MainActivity : AppCompatActivity(),
         i.putExtra(GameActivity.EXTRA_USER_TYPE, userType)
         startActivity(i)
 
-        // TODO handle going back to MainActivity from GameActivity
-//        finish()
-
         removeAllFirebaseListeners()
     }
 
@@ -232,7 +229,6 @@ class MainActivity : AppCompatActivity(),
 
         removeAllFirebaseListeners()
 
-        // TODO delete user form database
         if (mUser != null) {
             mOnlineRef.child(mUser!!.id).removeValue()
             mWaitingRef.child(mUser!!.id).removeValue()

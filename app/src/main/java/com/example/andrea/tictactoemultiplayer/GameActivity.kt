@@ -131,7 +131,7 @@ class GameActivity : AppCompatActivity(), BoardView.BoardListener {
 
                     // winner
                     mWinner = dataSnapshot.child("winner").getValue(Winner::class.java)!!
-                    if (mWinner.who != Winner.Who.NONE) {
+                    if (mWinner.who == Winner.Who.HOST || mWinner.who == Winner.Who.GUEST) {
                         if (hasTurn(mUserType)) {
                             infoTV.text = getString(R.string.you_win)
                         } else if (hasTurn(mOtherUserType)) {
@@ -140,6 +140,9 @@ class GameActivity : AppCompatActivity(), BoardView.BoardListener {
 
                         val bgResId = if (hasWon()) R.drawable.cell_win_background else R.drawable.cell_lose_background
                         mBoardView.colorCells(mWinner.cells, resources.getDrawable(bgResId))
+                    }
+                    else if (mWinner.who == Winner.Who.TIE) {
+                        infoTV.text = getString(R.string.tie)
                     }
                 } catch (e: Exception) {
                     Toast.makeText(this@GameActivity, getString(R.string.player_quit, mOtherUsername), Toast.LENGTH_LONG).show()
@@ -180,7 +183,7 @@ class GameActivity : AppCompatActivity(), BoardView.BoardListener {
         if (!hasTurn(mUserType)) {
             return
         }
-        // do nothing if someone already won
+        // do nothing if someone already won or ended up in a tie
         if (mWinner.who != Winner.Who.NONE) {
             return
         }
@@ -204,21 +207,16 @@ class GameActivity : AppCompatActivity(), BoardView.BoardListener {
                 CellView.CellInfo.CellStatus.NOUGHT -> Winner.Who.GUEST
                 else -> Winner.Who.NONE
             }
-            // set background to winner cells
-            var bgColor = resources.getDrawable(R.drawable.cell_background)
-            if (hasTurn(mUserType)) {
-                bgColor = resources.getDrawable(R.drawable.cell_win_background)
-            } else if (hasTurn(mOtherUserType)) {
-                bgColor = resources.getDrawable(R.drawable.cell_lose_background)
-            }
-            mBoardView.colorCells(winnerCells, bgColor)
         } else {
             mWinner.who = Winner.Who.NONE
-        }
 
-        // only swap the turn if nobody won
-        if (mWinner.who == Winner.Who.NONE) {
+            // only swap the turn if nobody won
             mTurn = mTurn.swap()
+
+            // if nobody won check for a tie
+            if (mBoardView.isBoardComplete()) {
+                mWinner.who = Winner.Who.TIE
+            }
         }
 
         saveDataToDatabase(Cell(info.row, info.column, currentStatus))

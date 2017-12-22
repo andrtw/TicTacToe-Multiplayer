@@ -89,6 +89,14 @@ class BoardView(context: Context) : TableLayout(context) {
         mBoard[row][column].status = status
     }
 
+    fun isBoardComplete() = mBoard.all {
+        // row
+        it.all {
+            // cell
+            it.isA(CellView.CellInfo.CellStatus.CROSS) || it.isA(CellView.CellInfo.CellStatus.NOUGHT)
+        }
+    }
+
     fun checkForWinner(whatToCheck: CellView.CellInfo.CellStatus): List<Cell> {
         val winnerCells = mutableListOf<Cell>()
 
